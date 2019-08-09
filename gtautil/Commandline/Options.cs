@@ -150,6 +150,9 @@ namespace GTAUtil
     [Verb("genpeddefs")]
     public class GenPedDefsOptions
     {
+        [Option('n', "name", HelpText = "DLC name")]
+        public string DlcName { get; set; }
+
         [Option('i', "input", HelpText = "Input directory")]
         public string InputDirectory { get; set; }
 
@@ -158,6 +161,9 @@ namespace GTAUtil
 
         [Option('f', "fivem", Default = false, HelpText = "Export to FiveM format")]
         public bool FiveMFormat { get; set; }
+
+        [Option('a', "altv", Default = false, HelpText = "Export to alt:V format")]
+        public bool AltVFormat { get; set; }
 
         [Option('c', "create", Default = false, HelpText = "Create project")]
         public bool CreateMode { get; set; }

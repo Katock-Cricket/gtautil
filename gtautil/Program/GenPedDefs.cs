@@ -201,9 +201,9 @@ namespace GTAUtil
                         return;
                     }
 
-                    Init(args);
+                    //Init(args);
 
-                    int maxDLCLevel = (Array.IndexOf(DLCList, opts.DLCLevel) == -1) ? DLCList.Length - 1 : Array.IndexOf(DLCList, opts.DLCLevel);
+                    //int maxDLCLevel = (Array.IndexOf(DLCList, opts.DLCLevel) == -1) ? DLCList.Length - 1 : Array.IndexOf(DLCList, opts.DLCLevel);
 
                     string[] files = Directory.GetFiles(opts.InputDirectory).Where(e => e.EndsWith("ymt.xml")).ToArray();
                     string[] dirs = Directory.GetDirectories(opts.InputDirectory);
@@ -218,15 +218,51 @@ namespace GTAUtil
                         Dictionary<string, int>
                     >>();
 
-                    for(int j=0; j<files.Length; j++)
+                    if(!opts.AltVFormat)
                     {
-                        string targetMetaXml = files[j];
-                        string targetName = targetMetaXml.Split('\\').Last().Replace(".ymt.xml", "");
-                        string parentDirectoryPath = Directory.GetParent(targetMetaXml).FullName;
-                        string parentDirectoryName = parentDirectoryPath.Split('\\').Last();
+                        for (int j = 0; j < files.Length; j++)
+                        {
+                            string targetMetaXml = files[j];
+                            string targetName = targetMetaXml.Split('\\').Last().Replace(".ymt.xml", "");
+                            string parentDirectoryPath = Directory.GetParent(targetMetaXml).FullName;
+                            string parentDirectoryName = parentDirectoryPath.Split('\\').Last();
 
-                        // Parse .ymt.xml
-                        string xml = File.ReadAllText(targetMetaXml);
+                            // Parse .ymt.xml
+                            string xml = File.ReadAllText(targetMetaXml);
+                            var doc = new XmlDocument();
+                            doc.LoadXml(xml);
+                            var meta = XmlMeta.GetMeta(doc);
+                            var ymt = new YmtPedDefinitionFile();
+                            ymt.ResourceFile.ResourceData = meta;
+                            ymt.Parse();
+
+                            ymts[targetName] = ymt;
+
+                        }
+                    }
+                    else
+                    {
+                        string xml = null;
+                        xml = @"<?xml version=""1.0"" encoding=""UTF-8""?>
+<CPedVariationInfo name=""mp_f_alt"">
+ <hash_49A0E46C value=""false"" />
+ <hash_F3928A70 value=""false"" />
+ <hash_364F037B value=""false"" />
+ <hash_12CAF91F value=""false"" />
+ <hash_B29BE228>255 255 255 255 255 255 255 255 255 255 255 255</hash_B29BE228>
+ <hash_E2489C4F itemType=""hash_D2E926F4"">
+ </hash_E2489C4F>
+ <aSelectionSets itemType=""CPedSelectionSet"" />
+ <compInfos itemType=""CComponentInfo"">
+ </compInfos>
+ <propInfo>
+  <hash_9AE1215F value=""0"" />
+  <hash_E8A00D49 itemType=""CPedPropMetaData"" />
+  <aAnchors itemType=""CAnchorProps"" />
+ </propInfo>
+ <dlcName>hash_984CD48B</dlcName>
+</CPedVariationInfo>
+";
                         var doc = new XmlDocument();
                         doc.LoadXml(xml);
                         var meta = XmlMeta.GetMeta(doc);
@@ -234,14 +270,28 @@ namespace GTAUtil
                         ymt.ResourceFile.ResourceData = meta;
                         ymt.Parse();
 
-                        ymts[targetName] = ymt;
+                        var meta2 = XmlMeta.GetMeta(doc);
+                        var ymt2 = new YmtPedDefinitionFile();
+                        ymt2.ResourceFile.ResourceData = meta2;
+                        ymt2.Parse();
 
+                        ymts["mp_f_freemode_01"] = ymt;
+                        ymts["mp_m_freemode_01"] = ymt2;
                     }
-
                     if(opts.FiveMFormat)
                     {
                         Directory.CreateDirectory(opts.OutputDirectory + "\\stream");
                         File.Create(opts.OutputDirectory + "\\__resource.lua");
+                    }
+                    else if(opts.AltVFormat)
+                    {
+                        if (opts.DlcName == null)
+                        {
+                            Console.WriteLine("Please provide DLC name with --name");
+                            return;
+                        }
+
+                        Directory.CreateDirectory(opts.OutputDirectory + "\\stream\\" + opts.DlcName + ".rpf");
                     }
                     else
                     {
@@ -305,6 +355,8 @@ namespace GTAUtil
                         File.WriteAllText(opts.OutputDirectory + "\\content.xml", contentXml);
                         File.WriteAllText(opts.OutputDirectory + "\\setup2.xml", setup2Xml);
                     }
+
+                    List<string> addedMetas = new List<string>();
 
                     foreach (var ymtEntry in ymts)
                     {
@@ -596,12 +648,63 @@ namespace GTAUtil
                             Dictionary<string, int>
                         >(cYddMapping, cTextureCount, pYddMapping, pTextureCount);
 
+                        string dlcName = null;
+
+                        if (opts.DlcName != null)
+                        {
+                            dlcName = targetName.Substring(0, 5) + opts.DlcName;
+                            ymt.Unk_376833625.DlcName = Utils.Hash(dlcName);
+                            ymt.metaYmtName = dlcName;
+                        }
+
                         if (opts.FiveMFormat)
                         {
                             ymt.Save(opts.OutputDirectory + "\\stream\\" + targetName + ".ymt");
 
                             // var xml2 = MetaXml.GetXml(ymt.ResourceFile.ResourceData);
                             // File.WriteAllText(opts.OutputDirectory + "\\stream\\" + targetMetaYmtFileName + ".xml", xml2);
+                        }
+                        else if(opts.AltVFormat)
+                        {
+                            if(dlcName == null)
+                            {
+                                Console.WriteLine("Please provide DLC name with --name");
+                                return;
+                            }
+                            Directory.CreateDirectory(opts.OutputDirectory + "\\stream\\" + opts.DlcName + ".rpf\\");
+
+                            string character = "";
+                            if (targetName == "mp_f_freemode_01")
+                                character = "SCR_CHAR_MULTIPLAYER_F";
+                            else
+                                character = "SCR_CHAR_MULTIPLAYER_M";
+
+                            string shopApparel = @"<?xml version=""1.0"" encoding=""UTF-8""?>
+<ShopPedApparel>
+	<pedName>" + targetName + @"</pedName>
+	<dlcName>" + dlcName + @"</dlcName>
+	<fullDlcName>" + targetName + "_" + dlcName + @"</fullDlcName>
+	<eCharacter>" + character + @"</eCharacter>
+	<creatureMetaData>MP_CreatureMetadata_" + opts.DlcName + @"</creatureMetaData>
+	<pedOutfits>
+	</pedOutfits>
+	<pedComponents>
+	</pedComponents>
+	<pedProps>
+	</pedProps>
+</ShopPedApparel>";
+                            File.WriteAllText(opts.OutputDirectory + "\\stream\\" + targetName + "_" + dlcName + ".meta", shopApparel);
+                            addedMetas.Add("stream/" + targetName + "_" + dlcName + ".meta" + ": SHOP_PED_APPAREL_META_FILE");
+
+                            string resourceCfg = @"type: dlc,
+main: stream.cfg,
+client-files: [
+  stream/*
+]
+";
+                            File.WriteAllText(opts.OutputDirectory + "\\resource.cfg", resourceCfg);
+
+                            ymt.Save(opts.OutputDirectory + "\\stream\\" + opts.DlcName + ".rpf\\" + targetName + "_" + dlcName + ".ymt");
                         }
                         else
                         {
@@ -637,7 +740,10 @@ namespace GTAUtil
 
                         var jsonString = JsonConvert.SerializeObject(overrideInfos, new JsonSerializerSettings() { Formatting = Newtonsoft.Json.Formatting.Indented });
 
-                        File.WriteAllText(opts.OutputDirectory + "\\" + targetName + ".override.json", jsonString);
+                        if(!opts.AltVFormat)
+                        {
+                            File.WriteAllText(opts.OutputDirectory + "\\" + targetName + ".override.json", jsonString);
+                        }
                     }
 
                     // Check which directories contains addon component / props
@@ -697,6 +803,8 @@ namespace GTAUtil
                             {
                                 if (opts.FiveMFormat)
                                     GenPedDefs_CreateComponentFiles_FiveM(opts, ymtDirName, entry, processedYmtData.Item2[entry.Key]);
+                                else if(opts.AltVFormat)
+                                    GenPedDefs_CreateComponentFiles_AltV(opts, ymtDirName, entry, processedYmtData.Item2[entry.Key], opts.DlcName);
                                 else
                                     GenPedDefs_CreateComponentFiles(opts, ymtDirName, entry, processedYmtData.Item2[entry.Key]);
                             }
@@ -705,6 +813,8 @@ namespace GTAUtil
                             {
                                 if (opts.FiveMFormat)
                                     GenPedDefs_CreatePropFiles_FiveM(opts, ymtDirName, entry, processedYmtData.Item4[entry.Key]);
+                                else if(opts.AltVFormat)
+                                    GenPedDefs_CreatePropFiles_AltV(opts, ymtDirName, entry, processedYmtData.Item4[entry.Key], opts.DlcName);
                                 else
                                     GenPedDefs_CreatePropFiles(opts, ymtDirName, entry, processedYmtData.Item4[entry.Key]);
                             }
@@ -712,6 +822,21 @@ namespace GTAUtil
 
                     }
 
+                    if(opts.AltVFormat)
+                    {
+                        string streamCfg = @"files: [
+  stream/" + opts.DlcName + ".rpf" + @"/*
+]
+
+meta: {
+";
+                        foreach (var metafile in addedMetas)
+                        {
+                            streamCfg += "  " + metafile + "\n";
+                        }
+                        streamCfg += "}\n";
+                        File.WriteAllText(opts.OutputDirectory + "\\stream.cfg", streamCfg);
+                    }
                 }
 
             });
@@ -838,6 +963,51 @@ namespace GTAUtil
 
             }
         }
+        public static void GenPedDefs_CreateComponentFiles_AltV(GenPedDefsOptions opts, string targetFileName, KeyValuePair<string, Tuple<string, int, int, int, string, string>> entry, int textureCount, string rpfFolderName)
+        {
+            string sourceYddFile = entry.Key;
+            string sourceYldFile = sourceYddFile.Replace(".ydd", ".yld");
+            string prefix = entry.Value.Item1;
+            int origPos = entry.Value.Item2;
+            int pos = entry.Value.Item3;
+            int count = entry.Value.Item4;
+            string folder = entry.Value.Item5;
+            string yddFileName = entry.Value.Item6;
+
+            string basePath = opts.OutputDirectory + "\\stream\\" + rpfFolderName + ".rpf\\";
+
+            string dlcName = targetFileName + "_" + targetFileName.Substring(0, 5) + rpfFolderName;
+
+            Directory.CreateDirectory(basePath + dlcName);
+
+            string targetYddFile = basePath + dlcName + "\\" + yddFileName;
+
+            File.Copy(sourceYddFile, targetYddFile, true);
+
+            if (File.Exists(sourceYldFile))
+            {
+                string targetYldFile = targetYddFile.Replace(".ydd", ".yld");
+                File.Copy(sourceYldFile, targetYldFile, true);
+            }
+            int texCount = 0;
+
+            for (int k = pos; k < textureCount + pos; k++)
+            {
+                char c = 'a';
+
+                for (int l = 0; l < texCount; l++)
+                    c++;
+
+                string sourceYtdPath = folder + "\\" + origPos + "\\" + texCount + ".ytd";
+                string targetYtdFile = prefix + "_diff_" + pos.ToString().PadLeft(3, '0') + "_" + c + "_uni.ytd";
+                string targetYtdPath = basePath + dlcName + "\\" + targetYtdFile;
+
+                File.Copy(sourceYtdPath, targetYtdPath, true);
+
+                texCount++;
+
+            }
+        }
 
         public static void GenPedDefs_CreatePropFiles_FiveM(GenPedDefsOptions opts, string targetFileName, KeyValuePair<string, Tuple<string, int, int, int, string, string>> entry, int textureCount)
         {
@@ -865,6 +1035,46 @@ namespace GTAUtil
                 string sourceYtdPath = folder + "\\" + origPos + "\\" + texCount + ".ytd";
                 string targetYtdFile = "p_" + prefix + "_diff_" + pos.ToString().PadLeft(3, '0') + "_" + c + ".ytd";
                 string targetYtdPath = opts.OutputDirectory + "\\stream\\" + targetFileName + "_p" + "^" + targetYtdFile;
+
+                File.Copy(sourceYtdPath, targetYtdPath, true);
+
+                texCount++;
+
+            }
+        }
+
+        public static void GenPedDefs_CreatePropFiles_AltV(GenPedDefsOptions opts, string targetFileName, KeyValuePair<string, Tuple<string, int, int, int, string, string>> entry, int textureCount, string rpfFolderName)
+        {
+            string sourceYddFile = entry.Key;
+            string prefix = entry.Value.Item1;
+            int origPos = entry.Value.Item2;
+            int pos = entry.Value.Item3;
+            int count = entry.Value.Item4;
+            string folder = entry.Value.Item5;
+            string yddFileName = entry.Value.Item6;
+
+            string basePath = opts.OutputDirectory + "\\stream\\" + rpfFolderName + ".rpf\\";
+
+            string dlcName = targetFileName + "_" + targetFileName.Substring(0, 5) + rpfFolderName;
+
+            Directory.CreateDirectory(basePath + dlcName);
+
+            string targetYddFile = basePath + dlcName + "_p" + "\\" + yddFileName;
+
+            File.Copy(sourceYddFile, targetYddFile, true);
+
+            int texCount = 0;
+
+            for (int k = pos; k < textureCount + pos; k++)
+            {
+                char c = 'a';
+
+                for (int l = 0; l < texCount; l++)
+                    c++;
+
+                string sourceYtdPath = folder + "\\" + origPos + "\\" + texCount + ".ytd";
+                string targetYtdFile = "p_" + prefix + "_diff_" + pos.ToString().PadLeft(3, '0') + "_" + c + ".ytd";
+                string targetYtdPath = basePath + dlcName + "_p" + "\\" + targetYtdFile;
 
                 File.Copy(sourceYtdPath, targetYtdPath, true);
 
