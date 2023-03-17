@@ -20,6 +20,11 @@ You must have basic knowledge with command-line to use this tool properly
 
 It is recommended to add GTAUtil folder to your %PATH% for quick access
 
+**Generate initial cache data (do it after each game update)**
+```powershell
+gtautil gencache
+```
+
 **Extract an rpf archive**
 
 ```powershell
