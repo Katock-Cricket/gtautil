@@ -22,7 +22,7 @@ It is recommended to add GTAUtil folder to your %PATH% for quick access
 
 **Generate initial cache data (do it after each game update)**
 ```powershell
-gtautil buildcache
+gtautil buildcache #it will take a while to process all files
 ```
 
 **Extract an rpf archive**
