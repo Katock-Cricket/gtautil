@@ -67,6 +67,7 @@ namespace GTAUtil
             HandleMergeYmapOptionsOptions(args);
             HandleMoveYmapOptionsOptions(args);
             HandleWorldToMLOOptions(args);
+            HandlePrefixYmapOptions(args);
             // HandlYmapToYdrOptions(args);
 
             if (args.Length == 0 || args[0] == "help")

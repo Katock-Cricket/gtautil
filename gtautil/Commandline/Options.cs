@@ -329,4 +329,18 @@ namespace GTAUtil
         public float Radius { get; set; }
     }
 
+    [Verb("prefixymap")]
+    public class PrefixYmapOptions
+    {
+
+        [Option('i', "input", HelpText = "Input files")]
+        public List<string> InputFiles { get; set; }
+
+        [Option('o', "output", HelpText = "Output directory")]
+        public string OutputDirectory { get; set; }
+
+        [Option('p', "prefix", HelpText = "Prefix")]
+        public string Prefix { get; set; }
+    }
+
 }
