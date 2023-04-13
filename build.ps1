@@ -55,4 +55,5 @@ function Find-MSBuild
 
 $MSBuild = Find-MSBuild
 
+& "$MSBuild" -t:restore
 & "$MSBuild" GTAUtil.sln /p:Configuration=$build
