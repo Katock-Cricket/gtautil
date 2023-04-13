@@ -67,6 +67,7 @@
     <Compile Include="Program\CreateArchive.cs" />
     <Compile Include="Program\FixArchive.cs" />
     <Compile Include="Program\Deamon.cs" />
+    <Compile Include="Program\PrefixYmap.cs" />
     <Compile Include="Program\YmapToYdr.cs" />
     <Compile Include="Program\World2MLO.cs" />
     <Compile Include="Program\MoveYmap.cs" />
