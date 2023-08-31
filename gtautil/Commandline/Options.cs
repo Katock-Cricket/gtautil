@@ -332,7 +332,6 @@ namespace GTAUtil
     [Verb("prefixymap")]
     public class PrefixYmapOptions
     {
-
         [Option('i', "input", HelpText = "Input files")]
         public List<string> InputFiles { get; set; }
 
@@ -341,6 +340,9 @@ namespace GTAUtil
 
         [Option('p', "prefix", HelpText = "Prefix")]
         public string Prefix { get; set; }
+
+        [Option('r', "replace", HelpText = "Replace")]
+        public List<string> Replace { get; set; }
     }
 
 }

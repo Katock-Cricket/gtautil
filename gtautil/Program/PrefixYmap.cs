@@ -8,6 +8,7 @@ using RageLib.Resources.GTA5.PC.GameFiles;
 using RageLib.GTA5.ArchiveWrappers;
 using RageLib.Hash;
 using RageLib.Resources.GTA5.PC.Meta;
+using System.Runtime.CompilerServices;
 
 namespace GTAUtil
 {
@@ -47,12 +48,29 @@ namespace GTAUtil
                         string ymapName = Jenkins.GetString((uint)ymap.CMapData.Name);
                         string parentName = Jenkins.GetString((uint)ymap.CMapData.Parent);
 
-                        ymap.CMapData.Name = (MetaName)Jenkins.Hash(opts.Prefix + ymapName);
-                        ymap.CMapData.Parent = (MetaName)Jenkins.Hash(opts.Prefix + parentName);
+                        if (!ymapName.StartsWith(opts.Prefix))
+                        {
+                            foreach(string replace in opts.Replace)
+                            {
+                                if (ymapName.StartsWith(replace))
+                                {
+                                    ymapName = opts.Prefix + ymapName.Remove(0, replace.Length);
+                                }
 
-                        Console.WriteLine(opts.Prefix + ymapName);
+                                if (parentName.StartsWith(replace))
+                                {
+                                    parentName = opts.Prefix + parentName.Remove(0, replace.Length);
+                                };
+                            }
+                        }
 
-                        ymap.Save(opts.OutputDirectory + "\\" + opts.Prefix + info.Name);
+                        ymap.CMapData.Name = (MetaName)Jenkins.Hash(ymapName);
+                        ymap.CMapData.Parent = (MetaName)Jenkins.Hash(parentName);
+                        ymap.CMapData.Block.Name = ymapName;
+
+                        Console.WriteLine(ymapName);
+
+                        ymap.Save(opts.OutputDirectory + "\\" + ymapName + ".ymap");
                     };
                 };
 
