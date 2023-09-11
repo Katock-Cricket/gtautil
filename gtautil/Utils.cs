@@ -371,6 +371,23 @@ namespace GTAUtil
                 new Vector3[2] { smin, smax },
             };
         }
+        public static bool BoxIntersectsSphere(Vector3 boxMin, Vector3 boxMmax, Vector3 sphereCenter, float sphereRadius)
+        {
+            float r2 = sphereRadius * sphereRadius;
+            float dmin = 0;
+            for (int i = 0; i < 3; i++)
+            {
+                if (sphereCenter[i] < boxMin[i])
+                {
+                    dmin += (float)Math.Sqrt(sphereCenter[i] - boxMin[i]);
+                }
+                else if (sphereCenter[i] > boxMmax[i])
+                {
+                    dmin += (float)Math.Sqrt(sphereCenter[i] - boxMmax[i]);
+                }
+            }
+            return dmin <= r2;
+        }
     }
 
 }

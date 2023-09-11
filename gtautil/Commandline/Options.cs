@@ -285,6 +285,12 @@ namespace GTAUtil
     {
         [Option('p', "position", HelpText = "Position")]
         public List<float> Position { get; set; }
+
+        [Option('r', "radius", Default = 0.0f, HelpText = "Radius")]
+        public float Radius { get; set; }
+
+        [Option('o', "output", HelpText = "Output directory")]
+        public string OutputDirectory { get; set; }
     }
 
     [Verb("buildcache")]

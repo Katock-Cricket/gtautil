@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Xml;
@@ -30,6 +31,8 @@ namespace GTAUtil
                     return;
                 }
 
+                var position = new Vector3(opts.Position[0], opts.Position[1], opts.Position[2]);
+                var filesToExtract = new List<string>();
                 var c = CultureInfo.InvariantCulture;
 
                 for (int i = 0; i < Cache["ymap"].Count; i++)
@@ -39,13 +42,16 @@ namespace GTAUtil
                     var entitiesExtentsMin = new Vector3((float)cYmap["entitiesExtentsMin"]["x"], (float)cYmap["entitiesExtentsMin"]["y"], (float)cYmap["entitiesExtentsMin"]["z"]);
                     var entitiesExtentsMax = new Vector3((float)cYmap["entitiesExtentsMax"]["x"], (float)cYmap["entitiesExtentsMax"]["y"], (float)cYmap["entitiesExtentsMax"]["z"]);
 
-                    if (
-                        opts.Position[0] >= entitiesExtentsMin.X && opts.Position[0] <= entitiesExtentsMax.X &&
-                        opts.Position[1] >= entitiesExtentsMin.Y && opts.Position[1] <= entitiesExtentsMax.Y &&
-                        opts.Position[2] >= entitiesExtentsMin.Z && opts.Position[2] <= entitiesExtentsMax.Z
-                    )
+                    if (Utils.BoxIntersectsSphere(entitiesExtentsMin, entitiesExtentsMax, position, opts.Radius))
                     {
-                        Console.WriteLine("ymap: " + ((string)cYmap["path"]).Split('\\').Last());
+                        string ymapFileName = ((string)cYmap["path"]).Split('\\').Last();
+                        
+                        Console.WriteLine("ymap: " + ymapFileName);
+
+                        if(filesToExtract.IndexOf(ymapFileName) == -1)
+                        {
+                            filesToExtract.Add(ymapFileName);
+                        }
 
                         for (int j = 0; j < cYmap["mloInstances"].Count; j++)
                         {
@@ -67,10 +73,17 @@ namespace GTAUtil
 
                                     if (cMloInstanceHash == cMloArchHash)
                                     {
-                                        Console.WriteLine("  ytyp => " + ((string)cYtyp["path"]).Split('\\').Last());
+                                        string ytypFileName = ((string)cYtyp["path"]).Split('\\').Last();
+
+                                        Console.WriteLine("  ytyp => " + ytypFileName);
                                         Console.WriteLine("    mlo => " + Jenkins.GetString(cMloArchHash));
                                         Console.WriteLine("    position => " + instancePos.X.ToString(c) + "," + instancePos.Y.ToString(c) + "," + instancePos.Z.ToString(c));
                                         Console.WriteLine("    rotation => " + instanceRot.X.ToString(c) + "," + instanceRot.Y.ToString(c) + "," + instanceRot.Z.ToString(c) + "," + instanceRot.W.ToString(c));
+
+                                        if (filesToExtract.IndexOf(ytypFileName) == -1)
+                                        {
+                                            filesToExtract.Add(ytypFileName);
+                                        }
 
                                         for (int m = 0; m < cMloArch["rooms"].Count; m++)
                                         {
@@ -85,11 +98,7 @@ namespace GTAUtil
                                             roomBbMinWorld = Utils.RotateTransform(Quaternion.Conjugate(instanceRot), roomBbMinWorld, Vector3.Zero);
                                             roomBbMaxWorld = Utils.RotateTransform(Quaternion.Conjugate(instanceRot), roomBbMaxWorld, Vector3.Zero);
 
-                                            if (
-                                                opts.Position[0] >= roomBbMinWorld.X && opts.Position[0] <= roomBbMaxWorld.X &&
-                                                opts.Position[1] >= roomBbMinWorld.Y && opts.Position[1] <= roomBbMaxWorld.Y &&
-                                                opts.Position[2] >= roomBbMinWorld.Z && opts.Position[2] <= roomBbMaxWorld.Z
-                                            )
+                                            if (Utils.BoxIntersectsSphere(roomBbMinWorld, roomBbMaxWorld, position, opts.Radius))
                                             {
                                                 Console.WriteLine("      room => " + cMloRoom["name"]);
                                             }
@@ -104,6 +113,32 @@ namespace GTAUtil
                         Console.WriteLine("");
                     }
                 }
+
+                var latest = new Dictionary<string, Tuple<int, string>>();
+
+                RageLib.GTA5.Utilities.ArchiveUtilities.ForEachFile(Settings.Default.GTAFolder, (fullFileName, file, encryption) =>
+                {
+                    string fileName = fullFileName.Split('\\').Last();
+
+                    if (filesToExtract.IndexOf(fileName) != -1)
+                    {
+                        int dlcLevel = GetDLCLevel(fullFileName);
+
+                        if (latest.TryGetValue(fileName, out Tuple<int, string> entry))
+                        {
+                            if (dlcLevel > entry.Item1)
+                            {
+                                latest[fileName] = new Tuple<int, string>(dlcLevel, fullFileName);
+                                file.Export(opts.OutputDirectory + "\\" + fileName);
+                            }
+                        }
+                        else
+                        {
+                            latest[fileName] = new Tuple<int, string>(dlcLevel, fullFileName);
+                            file.Export(opts.OutputDirectory + "\\" + fileName);
+                        }
+                    }
+                });
 
             });
         }

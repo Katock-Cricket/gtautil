@@ -65,6 +65,7 @@ namespace GTAUtil
                             {
                                 ["name"] = fileNameWithoutExtension,
                                 ["path"] = fullFileName,
+                                ["dlclevel"] = GetDLCLevel(fullFileName),
                                 ["hash"] = Jenkins.Hash(fileNameWithoutExtension),
                                 ["parent"] = (uint)ymap.CMapData.Parent,
                                 ["entitiesExtentsMin"] = new JObject()
@@ -129,6 +130,7 @@ namespace GTAUtil
                             {
                                 ["name"] = fileNameWithoutExtension,
                                 ["path"] = fullFileName,
+                                ["dlclevel"] = GetDLCLevel(fullFileName),
                                 ["hash"] = Jenkins.Hash(fileNameWithoutExtension),
                                 ["mloArchetypes"] = new JArray(),
                             };
