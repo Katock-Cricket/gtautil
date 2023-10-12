@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.IO;
 using RageLib.Archives;
+using RageLib.Data;
 using RageLib.GTA5.Archives;
 using RageLib.GTA5.ArchiveWrappers;
 using RageLib.GTA5.Resources.PC;
-
+using RageLib.Resources.GTA5;
 
 namespace GTAUtil
 {
@@ -131,11 +132,37 @@ namespace GTAUtil
                                 {
                                     Console.WriteLine("  " + file);
 
-                                    isResource = true;
+                                    if(type == ResourceFileTypes_GTA5_pc.Meta)
+                                    {
+                                        using(var ms = new FileStream(file, FileMode.Open))
+                                        {
+                                            var reader = new DataReader(ms, Endianess.BigEndian);
+                                            var ident = reader.ReadUInt32();
+                                            ms.Position = 0;
+                                            if(ident == 0x5053494E)
+                                            {
+                                                var binFile = curr.CreateBinaryFile();
+                                                binFile.Name = fileInfo.Name;
+                                                binFile.Import(ms);
+                                            }
+                                            else
+                                            {
+                                                isResource = true;
 
-                                    var resource = curr.CreateResourceFile();
-                                    resource.Name = fileInfo.Name;
-                                    resource.Import(file);
+                                                var resource = curr.CreateResourceFile();
+                                                resource.Name = fileInfo.Name;
+                                                resource.Import(ms);
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        isResource = true;
+
+                                        var resource = curr.CreateResourceFile();
+                                        resource.Name = fileInfo.Name;
+                                        resource.Import(file);
+                                    }
 
                                     break;
                                 }

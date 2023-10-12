@@ -351,4 +351,13 @@ namespace GTAUtil
         public List<string> Replace { get; set; }
     }
 
+    [Verb("fixdds")]
+    public class FIXDDSOptions
+    {
+        [Option('i', "input", HelpText = "Input files")]
+        public List<string> InputFiles { get; set; }
+
+        [Option('o', "output", HelpText = "Output directory")]
+        public string OutputDirectory { get; set; }
+    }
 }

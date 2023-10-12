@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Xml;
+using Newtonsoft.Json.Linq;
 using RageLib.GTA5.ResourceWrappers.PC.Meta;
 using RageLib.Hash;
 using RageLib.Resources.GTA5;
@@ -114,27 +116,67 @@ namespace GTAUtil
                     }
                 }
 
-                var latest = new Dictionary<string, Tuple<int, string>>();
-
-                RageLib.GTA5.Utilities.ArchiveUtilities.ForEachFile(Settings.Default.GTAFolder, (fullFileName, file, encryption) =>
+                bool matchEnd(string name, out string baseName)
                 {
+                    baseName = null;
+                    var spl = new List<string>(name.Split('_'));
+                    spl.RemoveAt(0);
+                    string maybeBase = string.Join("_", spl);
+
+                    foreach (string f in filesToExtract)
+                    {
+                        if(f == maybeBase)
+                        {
+                            baseName = maybeBase;
+                            return true;
+                        }
+                    }
+
+                    return false;
+                }
+
+                var latest = new Dictionary<string, Tuple<int, string>>();
+                var kept = new Dictionary<string, string>();
+
+                RageLib.GTA5.Utilities.ArchiveUtilities.ForEachResourceFile(Settings.Default.GTAFolder, (fullFileName, file, encryption) =>
+                {
+                    if(!(fullFileName.EndsWith(".ymap") || fullFileName.EndsWith(".ytyp")))
+                    {
+                        return;
+                    }
+
                     string fileName = fullFileName.Split('\\').Last();
 
-                    if (filesToExtract.IndexOf(fileName) != -1)
+                    if (matchEnd(fileName, out string baseName))
                     {
                         int dlcLevel = GetDLCLevel(fullFileName);
 
-                        if (latest.TryGetValue(fileName, out Tuple<int, string> entry))
+                        if (latest.TryGetValue(baseName, out Tuple<int, string> entry))
                         {
                             if (dlcLevel > entry.Item1)
                             {
-                                latest[fileName] = new Tuple<int, string>(dlcLevel, fullFileName);
-                                file.Export(opts.OutputDirectory + "\\" + fileName);
+                                latest[baseName] = new Tuple<int, string>(dlcLevel, fullFileName);
                             }
                         }
                         else
                         {
-                            latest[fileName] = new Tuple<int, string>(dlcLevel, fullFileName);
+                            latest[baseName] = new Tuple<int, string>(dlcLevel, fullFileName);
+                        }
+                    }
+                });
+
+                RageLib.GTA5.Utilities.ArchiveUtilities.ForEachResourceFile(Settings.Default.GTAFolder, (fullFileName, file, encryption) =>
+                {
+                    if (!(fullFileName.EndsWith(".ymap") || fullFileName.EndsWith(".ytyp")))
+                    {
+                        return;
+                    }
+
+                    foreach (var entry in latest)
+                    {
+                        if(fullFileName == entry.Value.Item2)
+                        {
+                            string fileName = fullFileName.Split('\\').Last();
                             file.Export(opts.OutputDirectory + "\\" + fileName);
                         }
                     }

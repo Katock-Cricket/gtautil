@@ -75,21 +75,31 @@ namespace GTAUtil
                         }
                         else
                         {
-                            if(file.Name.EndsWith(".xml") || file.Name.EndsWith(".meta"))
+
+
+                            if(file is IArchiveBinaryFile)
                             {
                                 byte[] data = Utils.GetBinaryFileData((IArchiveBinaryFile)file, encryption);
-                                string xml;
 
-                                if (data[0] == 0xEF && data[1] == 0xBB && data[2] == 0xBF)  // Detect BOM
+                                if (file.Name.EndsWith(".xml") || file.Name.EndsWith(".meta"))
                                 {
-                                    xml = Encoding.UTF8.GetString(data, 3, data.Length - 3);
+                                    string xml;
+
+                                    if (data[0] == 0xEF && data[1] == 0xBB && data[2] == 0xBF)  // Detect BOM
+                                    {
+                                        xml = Encoding.UTF8.GetString(data, 3, data.Length - 3);
+                                    }
+                                    else
+                                    {
+                                        xml = Encoding.UTF8.GetString(data);
+                                    }
+
+                                    File.WriteAllText(path, xml, Encoding.UTF8);
                                 }
                                 else
                                 {
-                                    xml = Encoding.UTF8.GetString(data);
+                                    File.WriteAllBytes(path, data);
                                 }
-
-                                File.WriteAllText(path, xml, Encoding.UTF8);
                             }
                             else
                             {

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
@@ -18,9 +19,7 @@ namespace GTAUtil
         {
             CommandLine.Parse<TestOptions>(args, (opts, gOpts) =>
             {
-                // Init(args);
-
-                Console.WriteLine("Here you can run test code");
+                //Init(args);
             });
         }
     }
