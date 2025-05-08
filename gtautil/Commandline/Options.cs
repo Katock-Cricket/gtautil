@@ -45,6 +45,20 @@ namespace GTAUtil
         public string OutputFolder { get; set; }
     }
 
+    [Verb("import2rpf")]
+    public class Import2RPFOptions
+    {
+        [Option('i', "input", HelpText = "Input file to import")]
+        public string InputFile { get; set; }
+
+        [Option('o', "output", HelpText = "Target RPF archive")]
+        public string OutputRpf { get; set; }
+
+        [Option('p', "path", HelpText = "Internal path in RPF (e.g. 'x64/data/newfile.dat')")]
+        public string InternalPath { get; set; }
+    }
+
+
     [Verb("worldtomlo")]
     public class WorldToMLOOptions
     {

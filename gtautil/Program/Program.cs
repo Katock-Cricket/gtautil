@@ -48,6 +48,7 @@ namespace GTAUtil
             HandleTestOptions(args);
             HandleCreateArchiveOptions(args);
             HandleExtractArchiveOptions(args);
+            HandleImport2RPFOptions(args);
             HandleFixArchiveOptions(args);
             HandleBuildCacheOptions(args);
             HandleCompileDrawableShadersOptions(args);

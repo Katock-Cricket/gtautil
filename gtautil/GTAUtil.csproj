@@ -9,7 +9,7 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>GTAUtil</RootNamespace>
     <AssemblyName>GTAUtil</AssemblyName>
-    <TargetFrameworkVersion>v4.8.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <NuGetPackageImportStamp>
@@ -68,6 +68,7 @@
     <Compile Include="Program\CreateArchive.cs" />
     <Compile Include="Program\FixArchive.cs" />
     <Compile Include="Program\Deamon.cs" />
+    <Compile Include="Program\Import2RPF.cs" />
     <Compile Include="Program\PrefixYmap.cs" />
     <Compile Include="Program\YmapToYdr.cs" />
     <Compile Include="Program\World2MLO.cs" />
