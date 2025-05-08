@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace GTAUtil
 {
@@ -48,13 +49,13 @@ namespace GTAUtil
     [Verb("import2rpf")]
     public class Import2RPFOptions
     {
-        [Option('i', "input", HelpText = "Input file to import")]
-        public string InputFile { get; set; }
+        [Option('i', "input",  HelpText = "Input file or directory to import")]
+        public string InputPath { get; set; }
 
         [Option('o', "output", HelpText = "Target RPF archive")]
         public string OutputRpf { get; set; }
 
-        [Option('p', "path", HelpText = "Internal path in RPF (e.g. 'x64/data/newfile.dat')")]
+        [Option('p', "path", HelpText = "Base internal path in RPF (e.g. 'x64/data' for directory imports)")]
         public string InternalPath { get; set; }
     }
 
